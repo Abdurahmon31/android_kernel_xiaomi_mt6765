@@ -1,0 +1,28 @@
+name: Build Lotus Kernel
+on:
+  workflow_dispatch: # This allows you to start it manually
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Kernel Source
+        uses: actions/checkout@v4
+
+      - name: Install Build Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential bc bison flex libssl-dev libelf-dev
+
+      - name: Build Kernel Binary
+        run: |
+          export ARCH=arm64
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          make lotus_defconfig
+          make -j$(nproc --all)
+
+      - name: Upload Image.gz-dtb
+        uses: actions/upload-artifact@v4
+        with:
+          name: Lotus-Kernel-Binary
+          path: arch/arm64/boot/Image.gz-dtb
