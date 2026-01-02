@@ -4,7 +4,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout Source
         uses: actions/checkout@v4
@@ -17,20 +17,20 @@ jobs:
 
       - name: Build Kernel
         run: |
-          # Find where 'ld' is and make sure the system can see it as 'ld'
-          # This bypasses the need for gcc-multilib
-          sudo ln -sf /usr/bin/ld.bfd /usr/bin/ld
+          # Use the stable version of the tool paths for Ubuntu 20.04
+          export ARCH=arm64
+          export CROSS_COMPILE=aarch64-linux-gnu-
           
-          # Start the build process
           make clean
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- lotus_defconfig
+          make lotus_defconfig
           
-          # Build with host tool overrides to prevent the 'collect2' error
+          # We tell the build to use the standard system 'gcc' and 'ld' 
+          # specifically for the host-side tools like fixdep.
           make -j$(nproc --all) \
-               ARCH=arm64 \
-               CROSS_COMPILE=aarch64-linux-gnu- \
                HOSTCC=gcc \
-               HOSTLD=ld
+               HOSTLD=ld \
+               CC=aarch64-linux-gnu-gcc \
+               LD=aarch64-linux-gnu-ld
 
       - name: Upload Result
         uses: actions/upload-artifact@v4
